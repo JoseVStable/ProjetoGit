@@ -1,0 +1,32 @@
+
+button {
+    cursor: pointer;
+}
+
+.header {
+
+    background-color: blue;
+
+
+}
+
+.header header{
+    
+    display: flex;
+    align-content: center;
+    justify-content: 0 space-between;
+}
+
+.header header .nav-group{
+    
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+
+
+}
+
+
+
+
+
