@@ -1,66 +1,52 @@
-name: Static Web Security - 2 Nodes
+name: Security Minimal (SAST & DAST)
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   # ===============================================
-  # NÓ 1: SAST - Static Application Security Testing
+  # 1. SAST - CodeQL (Análise Estática)
   # ===============================================
-  sast_job:
+  sast_codeql:
+    name: SAST - CodeQL
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout do Código
         uses: actions/checkout@v4
         
-      - name: ⚙️ Configurar Node.js
-        uses: actions/setup-node@v4
+      - name: 🔍 CodeQL - Inicializar
+        uses: github/codeql-action/init@v3
         with:
-          node-version: '20'
+          languages: javascript 
           
-      - name: 📦 Instalar Dependências (Se houver package.json)
-        # Necessário se houver um package.json para que linters funcionem
-        run: npm install
-
-      - name: 🛡️ SAST Placeholder (Análise de Código Estático)
-        # Para projetos estáticos, o SAST real seria um linter de segurança
-        # (ex: para verificar o uso correto de JS ou estrutura HTML)
-        run: echo "SAST node completed. Substituir este comando pelo seu linter de segurança preferido."
-        # Exemplo real: Rodar um linter configurado (ex: npx eslint . --ext .js --max-warnings 0)
-
-      # O CodeQL (GitHub Advanced Security) também seria um bom SAST aqui,
-      # mas o CodeQL tem seu próprio processo de setup e upload.
+      - name: 🛡️ CodeQL - Analisar
+        uses: github/codeql-action/analyze@v3
 
   # ===============================================
-  # NÓ 2: DAST - Dynamic Application Security Testing
+  # 2. DAST - OWASP ZAP (Análise Dinâmica)
   # ===============================================
-  dast_job:
-    needs: sast_job # Garante que o DAST só comece após o SAST terminar
+  dast_zap:
+    name: DAST - OWASP ZAP
+    needs: sast_codeql
     runs-on: ubuntu-latest
     
     steps:
       - name: ⬇️ Checkout do Código
         uses: actions/checkout@v4
         
-      - name: ⚙️ Configurar Node.js (Para o 'serve')
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          
-      - name: 📦 Instalar Dependências (Se existir package.json)
-        run: npm install
-        
-      - name: 🚀 Iniciar Servidor Simples
-        # Inicia o servidor estático na porta 3000 em background
-        run: npx serve -s . -l 3000 & 
-        
-        
-      - name: 💥 DAST - OWASP ZAP Baseline Scan
+      # Passo Único para Servir: Instalação e Início do 'serve'
+      - name: 🚀 Instalar e Iniciar Servidor Local
+        # Instala temporariamente o 'serve' e o executa em background
+        run: |
+          npm install -g serve # Instala o 'serve' globalmente no runner
+          serve -s . -l 3000 & 
+          sleep 5 # Dá tempo para o servidor iniciar
+
+      - name: 💥 DAST - ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target: 'http://localhost:3000' # Endereço do servidor local
-          fail_action: true # FALHA o job se encontrar vulnerabilidades
+          target: 'http://localhost:3000'
+          fail_action: true
