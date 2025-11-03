@@ -1,0 +1,43 @@
+name: Static Web Security Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout do Código
+        uses: actions/checkout@v4
+        
+      # ----------------------------------------------------
+      # SAST - Análise de Código Estático (HTML/CSS)
+      # ----------------------------------------------------
+      
+      - name: 🛠️ Instalar Ferramentas de Verificação (Exemplo com HTMLHint)
+        # Este passo depende das ferramentas que você quer usar.
+        # Se você tiver dependências Node (ex: usando npm/yarn), você precisaria de setup-node.
+        # Para simplicidade, vamos assumir que você quer verificar Apenas o HTML/CSS
+        run: |
+          # Exemplo: Se você tivesse um package.json com 'npm install'
+          # npm install
+          echo "Aguardando implementação do SAST de HTML/CSS..."
+          # Para projetos puramente estáticos, você pode pular o SAST ou usar scanners online/GitHub Advanced Security.
+          
+      # ----------------------------------------------------
+      # DAST - Análise Dinâmica (OWASP ZAP)
+      # ----------------------------------------------------
+      
+      - name: 🚀 Iniciar Servidor Simples (Para DAST)
+        # Usamos o 'serve' para hospedar os arquivos HTML/CSS estáticos
+        run: npx serve -s . -l 3000 & # Roda na pasta atual '.' na porta 3000
+        run: sleep 5 # Espera o servidor iniciar
+        
+      - name: 💥 DAST - OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:3000' # Escaneia a página servida localmente
+          fail_action: true # Falha o pipeline se encontrar vulnerabilidades
