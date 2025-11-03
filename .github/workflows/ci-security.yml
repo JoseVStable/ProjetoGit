@@ -34,7 +34,6 @@ jobs:
       - name: 🚀 Iniciar Servidor Simples (Para DAST)
         # Usamos o 'serve' para hospedar os arquivos HTML/CSS estáticos
         run: npx serve -s . -l 3000 & # Roda na pasta atual '.' na porta 3000
-        run: sleep 5 # Espera o servidor iniciar
         
       - name: 💥 DAST - OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
