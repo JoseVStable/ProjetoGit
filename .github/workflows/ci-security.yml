@@ -57,7 +57,7 @@ jobs:
       - name: 🚀 Iniciar Servidor Simples
         # Inicia o servidor estático na porta 3000 em background
         run: npx serve -s . -l 3000 & 
-        run: sleep 5 # Espera 5 segundos para o servidor iniciar completamente
+        
         
       - name: 💥 DAST - OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
