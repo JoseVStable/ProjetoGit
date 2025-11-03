@@ -1,42 +1,66 @@
-name: Static Web Security Check
+name: Static Web Security - 2 Nodes
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  security_scan:
+  # ===============================================
+  # NÓ 1: SAST - Static Application Security Testing
+  # ===============================================
+  sast_job:
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout do Código
         uses: actions/checkout@v4
         
-      # ----------------------------------------------------
-      # SAST - Análise de Código Estático (HTML/CSS)
-      # ----------------------------------------------------
-      
-      - name: 🛠️ Instalar Ferramentas de Verificação (Exemplo com HTMLHint)
-        # Este passo depende das ferramentas que você quer usar.
-        # Se você tiver dependências Node (ex: usando npm/yarn), você precisaria de setup-node.
-        # Para simplicidade, vamos assumir que você quer verificar Apenas o HTML/CSS
-        run: |
-          # Exemplo: Se você tivesse um package.json com 'npm install'
-          # npm install
-          echo "Aguardando implementação do SAST de HTML/CSS..."
-          # Para projetos puramente estáticos, você pode pular o SAST ou usar scanners online/GitHub Advanced Security.
+      - name: ⚙️ Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
           
-      # ----------------------------------------------------
-      # DAST - Análise Dinâmica (OWASP ZAP)
-      # ----------------------------------------------------
-      
-      - name: 🚀 Iniciar Servidor Simples (Para DAST)
-        # Usamos o 'serve' para hospedar os arquivos HTML/CSS estáticos
-        run: npx serve -s . -l 3000 & # Roda na pasta atual '.' na porta 3000
+      - name: 📦 Instalar Dependências (Se houver package.json)
+        # Necessário se houver um package.json para que linters funcionem
+        run: npm install
+
+      - name: 🛡️ SAST Placeholder (Análise de Código Estático)
+        # Para projetos estáticos, o SAST real seria um linter de segurança
+        # (ex: para verificar o uso correto de JS ou estrutura HTML)
+        run: echo "SAST node completed. Substituir este comando pelo seu linter de segurança preferido."
+        # Exemplo real: Rodar um linter configurado (ex: npx eslint . --ext .js --max-warnings 0)
+
+      # O CodeQL (GitHub Advanced Security) também seria um bom SAST aqui,
+      # mas o CodeQL tem seu próprio processo de setup e upload.
+
+  # ===============================================
+  # NÓ 2: DAST - Dynamic Application Security Testing
+  # ===============================================
+  dast_job:
+    needs: sast_job # Garante que o DAST só comece após o SAST terminar
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: ⬇️ Checkout do Código
+        uses: actions/checkout@v4
+        
+      - name: ⚙️ Configurar Node.js (Para o 'serve')
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: 📦 Instalar Dependências (Se existir package.json)
+        run: npm install
+        
+      - name: 🚀 Iniciar Servidor Simples
+        # Inicia o servidor estático na porta 3000 em background
+        run: npx serve -s . -l 3000 & 
+        run: sleep 5 # Espera 5 segundos para o servidor iniciar completamente
         
       - name: 💥 DAST - OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target: 'http://localhost:3000' # Escaneia a página servida localmente
-          fail_action: true # Falha o pipeline se encontrar vulnerabilidades
+          target: 'http://localhost:3000' # Endereço do servidor local
+          fail_action: true # FALHA o job se encontrar vulnerabilidades
